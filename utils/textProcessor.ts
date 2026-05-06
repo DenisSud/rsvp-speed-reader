@@ -73,7 +73,7 @@ export const processText = (text: string): WordData[] => {
               text: "",
               focalIndex: 0,
               isPause: true,
-              fixedPauseMs: 300,
+              fixedPauseMs: 200,
             });
             break;
           }

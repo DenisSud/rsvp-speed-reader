@@ -33,21 +33,49 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
     );
   }
 
-  // Pause token → blank screen, no text
+  // Pause token → same structure as word display, no text (avoids layout shift)
   if (currentWord.isPause) {
     return (
       <div
-        className={`w-full flex items-center justify-center bg-black relative overflow-hidden transition-all duration-700 ${
+        className={`w-full flex flex-col items-center justify-center bg-black relative overflow-hidden transition-all duration-700 ${
           zenMode ? "h-screen border-none" : "h-64 border-y border-zinc-800"
         } ${fontClass}`}
       >
-        {/* Subtle break indicator — faint horizontal line */}
+        {/* Vertical Guideline Markers — same as word display */}
         <div
-          className={`absolute left-1/2 -translate-x-1/2 h-px bg-zinc-800 transition-all ${
-            zenMode ? "w-32" : "w-24"
+          className={`absolute left-1/2 -translate-x-1/2 w-px bg-zinc-700 transition-all duration-700 z-30 ${
+            zenMode
+              ? "top-1/4 h-16 opacity-30"
+              : "top-1/2 -translate-y-[5rem] h-8"
           }`}
-        />
-        {/* Progress remains visible */}
+        ></div>
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 w-px bg-zinc-700 transition-all duration-700 z-30 ${
+            zenMode
+              ? "bottom-1/4 h-16 opacity-30"
+              : "bottom-1/2 translate-y-[5rem] h-8"
+          }`}
+        ></div>
+
+        {/* Horizontal Guideline — same as word display */}
+        {!zenMode && (
+          <div className="absolute top-1/2 w-full h-px bg-zinc-900 -translate-y-1/2 z-0"></div>
+        )}
+
+        {/* Empty word container — holds the space, no text */}
+        <div
+          className={`relative flex items-center tracking-tight transition-all duration-700 w-full z-10 ${
+            zenMode ? "text-6xl md:text-9xl" : "text-4xl md:text-7xl"
+          } ${weightClass}`}
+        >
+          <div className="flex w-full items-center justify-center relative">
+            <div className="flex-1 text-right"></div>
+            <div className="w-[1ch] shrink-0 text-center"></div>
+            <div className="flex-1 text-left"></div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
         <div
           className={`absolute bottom-0 left-0 h-1 bg-red-600 transition-all duration-100 ease-linear z-40 ${
             zenMode ? "opacity-20 h-0.5" : "opacity-100"
