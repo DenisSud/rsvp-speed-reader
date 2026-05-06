@@ -7,10 +7,19 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +31,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Demo asset (large binary, keep in releases not repo)
+speed-read.gif
