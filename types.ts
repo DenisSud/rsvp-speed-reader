@@ -2,6 +2,11 @@ export interface WordData {
   text: string;
   focalIndex: number;
   pauseMultiplier?: number;
+  /** Fixed-duration blank pause in ms (sentence/paragraph breaks).
+   *  Overrides WPM-based timing. */
+  fixedPauseMs?: number;
+  /** When true, RSVP player shows blank screen instead of text. */
+  isPause?: boolean;
 }
 
 export type AppFont = 'mono' | 'sans' | 'serif';

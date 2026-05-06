@@ -101,16 +101,29 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (isPlaying && words.length > 0 && currentIndex < words.length) {
-      let currentWpm = wpm;
-
-      if (enableGradualIncrease) {
-        const progressRatio = currentIndex / (words.length - 1 || 1);
-        currentWpm = initialWpm + (targetWpm - initialWpm) * progressRatio;
-      }
-
       const word = words[currentIndex];
-      const pauseMultiplier = word?.pauseMultiplier || 1;
-      const interval = (60000 / currentWpm) * pauseMultiplier;
+      let interval: number;
+
+      if (word?.fixedPauseMs !== undefined) {
+        // Fixed-duration blank pause (sentence / paragraph break)
+        interval = word.fixedPauseMs;
+      } else {
+        let wpmForCalc = wpm;
+
+        if (enableGradualIncrease) {
+          // Only advance progressive speed across real (non-pause) words
+          const realUpTo = words
+            .slice(0, currentIndex + 1)
+            .filter((w) => !w.isPause).length;
+          const totalReal =
+            words.filter((w) => !w.isPause).length || 1;
+          const progressRatio = realUpTo / totalReal;
+          wpmForCalc = initialWpm + (targetWpm - initialWpm) * progressRatio;
+        }
+
+        const pauseMultiplier = word?.pauseMultiplier || 1;
+        interval = (60000 / wpmForCalc) * pauseMultiplier;
+      }
 
       timerRef.current = setTimeout(() => {
         setCurrentIndex((prev) => {
@@ -128,14 +141,27 @@ const App: React.FC = () => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isPlaying, currentIndex, words, wpm]);
+  }, [isPlaying, currentIndex, words, wpm, enableGradualIncrease, initialWpm, targetWpm]);
 
-  const progress =
-    words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
+  // Progress based on real (non-pause) words only
+  const realWordCount = useMemo(
+    () => words.filter((w) => !w.isPause).length,
+    [words]
+  );
+  const progress = useMemo(() => {
+    if (realWordCount === 0) return 0;
+    const realUpTo = words
+      .slice(0, currentIndex + 1)
+      .filter((w) => !w.isPause).length;
+    return Math.min(100, (realUpTo / realWordCount) * 100);
+  }, [words, currentIndex, realWordCount]);
 
   const currentDisplayWpm = useMemo(() => {
-    if (isPlaying && enableGradualIncrease && words.length > 0) {
-      const progressRatio = currentIndex / (words.length - 1 || 1);
+    if (isPlaying && enableGradualIncrease && realWordCount > 0) {
+      const realUpTo = words
+        .slice(0, currentIndex + 1)
+        .filter((w) => !w.isPause).length;
+      const progressRatio = realUpTo / realWordCount;
       return Math.round(initialWpm + (targetWpm - initialWpm) * progressRatio);
     }
     return wpm;
@@ -143,7 +169,8 @@ const App: React.FC = () => {
     isPlaying,
     enableGradualIncrease,
     currentIndex,
-    words.length,
+    words,
+    realWordCount,
     initialWpm,
     targetWpm,
     wpm,
@@ -284,7 +311,15 @@ const App: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setCurrentIndex(Math.max(0, currentIndex - 10))}
+              onClick={() => {
+                let skips = 10;
+                let idx = currentIndex - 1;
+                while (skips > 0 && idx >= 0) {
+                  if (!words[idx].isPause) skips--;
+                  idx--;
+                }
+                setCurrentIndex(Math.max(0, idx + 1));
+              }}
               className="p-3 text-zinc-500 hover:text-white transition-colors"
               title="Back 10 words"
             >
@@ -303,9 +338,15 @@ const App: React.FC = () => {
             </button>
 
             <button
-              onClick={() =>
-                setCurrentIndex(Math.min(words.length - 1, currentIndex + 10))
-              }
+              onClick={() => {
+                let skips = 10;
+                let idx = currentIndex + 1;
+                while (skips > 0 && idx < words.length) {
+                  if (!words[idx].isPause) skips--;
+                  idx++;
+                }
+                setCurrentIndex(Math.min(words.length - 1, idx));
+              }}
               className="p-3 text-zinc-500 hover:text-white transition-colors"
               title="Forward 10 words"
             >
@@ -390,8 +431,8 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2 text-zinc-500">
                 <Info size={14} />
                 <span className="text-xs">
-                  {words.length} words detected. Total reading time:{" "}
-                  {Math.ceil(words.length / wpm)} min.
+                  {realWordCount} words detected. Total reading time:{" "}
+                  {Math.ceil(realWordCount / wpm)} min.
                 </span>
               </div>
 

@@ -33,6 +33,31 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
     );
   }
 
+  // Pause token → blank screen, no text
+  if (currentWord.isPause) {
+    return (
+      <div
+        className={`w-full flex items-center justify-center bg-black relative overflow-hidden transition-all duration-700 ${
+          zenMode ? "h-screen border-none" : "h-64 border-y border-zinc-800"
+        } ${fontClass}`}
+      >
+        {/* Subtle break indicator — faint horizontal line */}
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 h-px bg-zinc-800 transition-all ${
+            zenMode ? "w-32" : "w-24"
+          }`}
+        />
+        {/* Progress remains visible */}
+        <div
+          className={`absolute bottom-0 left-0 h-1 bg-red-600 transition-all duration-100 ease-linear z-40 ${
+            zenMode ? "opacity-20 h-0.5" : "opacity-100"
+          }`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    );
+  }
+
   const { prefix, focal, suffix } = splitWord(currentWord);
 
   return (
