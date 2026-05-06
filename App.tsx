@@ -64,6 +64,8 @@ const App: React.FC = () => {
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const elapsedRef = useRef(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   const togglePlay = useCallback(() => {
     setIsPlaying((prev) => {
@@ -77,6 +79,8 @@ const App: React.FC = () => {
   const reset = useCallback(() => {
     setIsPlaying(false);
     setCurrentIndex(0);
+    elapsedRef.current = 0;
+    setElapsedMs(0);
   }, []);
 
   const enterZenMode = () => {
@@ -102,6 +106,9 @@ const App: React.FC = () => {
       } else if (e.code === "Escape") {
         setIsZenMode(false);
         setShowSettings(false);
+      } else if (e.code === "KeyF") {
+        e.preventDefault();
+        enterZenMode();
       }
     };
 
@@ -153,6 +160,46 @@ const App: React.FC = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [isPlaying, currentIndex, words, wpm, enableGradualIncrease, initialWpm, targetWpm]);
+
+  // ── Elapsed time tracking ───────────────────────────────────
+  useEffect(() => {
+    if (!isPlaying) return;
+    const tick = setInterval(() => {
+      elapsedRef.current += 100;
+      setElapsedMs(elapsedRef.current);
+    }, 100);
+    return () => clearInterval(tick);
+  }, [isPlaying]);
+
+  // ── Total estimated time (sum of all word+pause intervals) ──
+  const totalMs = useMemo(() => {
+    let sum = 0;
+    let wpmForCalc = wpm;
+
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+
+      if (enableGradualIncrease) {
+        const realUpTo = words
+          .slice(0, i + 1)
+          .filter((x) => !x.isPause).length;
+        const totalReal =
+          words.filter((x) => !x.isPause).length || 1;
+        const p = realUpTo / totalReal;
+        wpmForCalc = initialWpm + (targetWpm - initialWpm) * p;
+      }
+
+      if (w?.pauseType) {
+        const cfg = PAUSE_CONFIG[w.pauseType];
+        const raw = cfg.base * (300 / wpmForCalc);
+        sum += Math.min(cfg.max, Math.max(cfg.min, raw));
+      } else {
+        sum += (60000 / wpmForCalc) * (w.pauseMultiplier || 1);
+      }
+    }
+
+    return sum;
+  }, [words, wpm, enableGradualIncrease, initialWpm, targetWpm]);
 
   // Progress based on real (non-pause) words only
   const realWordCount = useMemo(
@@ -215,8 +262,17 @@ const App: React.FC = () => {
                 ESC
               </span>{" "}
               <span className="text-xs">
-                <span className="sm:hidden">Exit button</span>
+                <span className="sm:hidden">Exit</span>
                 <span className="hidden sm:inline">ESC</span> to Exit Zen
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-0.5 bg-zinc-800 rounded text-white text-xs font-bold sm:inline hidden">
+                F
+              </span>{" "}
+              <span className="text-xs">
+                <span className="sm:hidden">Tap</span>
+                <span className="hidden sm:inline">F</span> to Enter Zen
               </span>
             </div>
           </div>
@@ -226,50 +282,51 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Header - Hidden in Zen Mode */}
+      {/* Header — hidden in zen mode */}
       <header
-        className={`p-6 flex justify-between items-center border-b border-zinc-900 transition-all duration-500 ${
+        className={`px-4 py-2 flex items-center gap-2 border-b border-zinc-900 transition-all duration-500 ${
           isZenMode
             ? "opacity-0 -translate-y-full pointer-events-none absolute w-full"
             : "opacity-100 translate-y-0 relative"
         }`}
       >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center font-bold text-black shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-            R
-          </div>
-          <h1 className="text-xl font-bold tracking-tight uppercase">
-            RSVP Speed Reader
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <VideoExportButton
-            words={words}
-            wpm={wpm}
-            font={font}
-            fontWeight={fontWeight}
-            sideOpacity={sideOpacity}
-            enableGradualIncrease={enableGradualIncrease}
-            initialWpm={initialWpm}
-            targetWpm={targetWpm}
+        <VideoExportButton
+          words={words}
+          wpm={wpm}
+          font={font}
+          fontWeight={fontWeight}
+          sideOpacity={sideOpacity}
+          enableGradualIncrease={enableGradualIncrease}
+          initialWpm={initialWpm}
+          targetWpm={targetWpm}
+        />
+
+        <div className="flex-1">
+          <UrlBar
+            onTextReady={(extractedText, title) => {
+              const content = title
+                ? `${title}\n\n${extractedText}`
+                : extractedText;
+              setText(content);
+              reset();
+            }}
           />
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-2 hover:bg-zinc-900 rounded-full transition-colors flex items-center gap-2"
-          >
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hidden sm:inline">
-              Settings
-            </span>
-            <Settings
-              size={20}
-              className={
-                showSettings
-                  ? "text-red-500 animate-spin-slow"
-                  : "text-zinc-400"
-              }
-            />
-          </button>
         </div>
+
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="p-2 hover:bg-zinc-900 rounded-full transition-colors flex items-center gap-2 shrink-0"
+          title="Settings"
+        >
+          <Settings
+            size={20}
+            className={
+              showSettings
+                ? "text-red-500 animate-spin-slow"
+                : "text-zinc-400"
+            }
+          />
+        </button>
       </header>
 
       {/* Main Player Area */}
@@ -278,18 +335,6 @@ const App: React.FC = () => {
           isZenMode ? "gap-0 py-0" : "gap-6 py-12"
         }`}
       >
-        {/* URL Bar — always visible, hidden in zen mode */}
-        <UrlBar
-          isZenMode={isZenMode}
-          onTextReady={(extractedText, title) => {
-            const content = title
-              ? `${title}\n\n${extractedText}`
-              : extractedText;
-            setText(content);
-            reset();
-          }}
-        />
-
         <div 
           onClick={isZenMode ? togglePlay : undefined}
           className={`w-full flex justify-center items-center ${isZenMode ? 'cursor-pointer' : ''}`}
@@ -301,6 +346,8 @@ const App: React.FC = () => {
             font={font}
             fontWeight={fontWeight}
             sideOpacity={sideOpacity}
+            elapsedMs={elapsedMs}
+            totalMs={totalMs}
           />
         </div>
 
@@ -694,9 +741,9 @@ const App: React.FC = () => {
                   </p>
                 </li>
                 <li className="flex gap-3">
-                  <span className="text-red-500 font-bold">Zen</span>
+                  <span className="text-red-500 font-bold">F</span>
                   <p>
-                    Click the <b>Zen</b> button for zero distractions.
+                    Enter <b>Zen Mode</b> (press <b className="text-white">F</b> or click Zen button).
                   </p>
                 </li>
                 <li className="flex gap-3">

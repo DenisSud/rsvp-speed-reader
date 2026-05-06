@@ -8,7 +8,15 @@ interface RSVPPlayerProps {
   font: AppFont;
   fontWeight: AppFontWeight;
   sideOpacity: number;
+  elapsedMs?: number;
+  totalMs?: number;
 }
+
+const fmtTime = (ms: number): string => {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return `${m}:${(s % 60).toString().padStart(2, '0')}`;
+};
 
 const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
   currentWord,
@@ -17,6 +25,8 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
   font,
   fontWeight,
   sideOpacity,
+  elapsedMs,
+  totalMs,
 }) => {
   const fontClass = font === 'mono' ? 'font-mono' : font === 'serif' ? 'font-serif' : 'font-sans';
   const weightClass = fontWeight === 'bold' ? 'font-bold' : 'font-normal';
@@ -65,7 +75,7 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
         {/* Empty word container — holds the space, no text */}
         <div
           className={`relative flex items-center tracking-tight transition-all duration-700 w-full z-10 ${
-            zenMode ? "text-6xl md:text-9xl" : "text-4xl md:text-7xl"
+            zenMode ? "text-3xl sm:text-6xl md:text-9xl" : "text-2xl sm:text-4xl md:text-7xl"
           } ${weightClass}`}
         >
           <div className="flex w-full items-center justify-center relative">
@@ -118,13 +128,13 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
       {/* Word Container */}
       <div
         className={`relative flex items-center tracking-tight transition-all duration-700 w-full z-10 ${
-          zenMode ? "text-6xl md:text-9xl" : "text-4xl md:text-7xl"
+          zenMode ? "text-3xl sm:text-6xl md:text-9xl" : "text-2xl sm:text-4xl md:text-7xl"
         } ${weightClass}`}
       >
         <div className="flex w-full items-center justify-center relative">
           {/* Prefix */}
           <div 
-            className="flex-1 text-right text-white whitespace-nowrap overflow-visible"
+            className="flex-1 text-right text-white whitespace-nowrap overflow-hidden"
             style={{ opacity: sideOpacity }}
           >
             {prefix}
@@ -137,7 +147,7 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
 
           {/* Suffix */}
           <div 
-            className="flex-1 text-left text-white whitespace-nowrap overflow-visible"
+            className="flex-1 text-left text-white whitespace-nowrap overflow-hidden"
             style={{ opacity: sideOpacity }}
           >
             {suffix}
@@ -152,6 +162,26 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
         }`}
         style={{ width: `${progress}%` }}
       ></div>
+
+      {/* Time indicators */}
+      {elapsedMs !== undefined && totalMs !== undefined && totalMs > 0 && (
+        <>
+          <span
+            className={`absolute bottom-3 left-4 text-[10px] font-mono text-zinc-600 z-40 ${
+              zenMode ? "opacity-20" : ""
+            }`}
+          >
+            {fmtTime(elapsedMs)}
+          </span>
+          <span
+            className={`absolute bottom-3 right-4 text-[10px] font-mono text-zinc-600 z-40 ${
+              zenMode ? "opacity-20" : ""
+            }`}
+          >
+            -{fmtTime(Math.max(0, totalMs - elapsedMs))}
+          </span>
+        </>
+      )}
     </div>
   );
 };

@@ -3,13 +3,12 @@ import { Link, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Readability } from '@mozilla/readability';
 
 interface UrlBarProps {
-  isZenMode: boolean;
   onTextReady: (text: string, title: string) => void;
 }
 
 type Status = 'idle' | 'loading' | 'loaded' | 'error';
 
-const UrlBar: React.FC<UrlBarProps> = ({ isZenMode, onTextReady }) => {
+const UrlBar: React.FC<UrlBarProps> = ({ onTextReady }) => {
   const [status, setStatus] = useState<Status>('idle');
   const [inputValue, setInputValue] = useState('');
   const [loadedUrl, setLoadedUrl] = useState('');
@@ -118,56 +117,48 @@ const UrlBar: React.FC<UrlBarProps> = ({ isZenMode, onTextReady }) => {
   };
 
   return (
-    <div
-      className={`w-full transition-all duration-500 ${
-        isZenMode
-          ? 'opacity-0 -translate-y-4 pointer-events-none'
-          : 'opacity-100 translate-y-0'
-      }`}
+    <form
+      onSubmit={handleSubmit}
+      className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900/50 border border-zinc-800 rounded-lg transition-colors focus-within:border-red-600/50"
     >
-      <form
-        onSubmit={handleSubmit}
-        className="flex items-center gap-3 px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl transition-colors focus-within:border-red-600/50"
-      >
-        <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-900">
-          {leftIcon()}
-        </div>
+      <div className="shrink-0 flex items-center justify-center">
+        {leftIcon()}
+      </div>
 
-        <input
-          ref={inputRef}
-          type="url"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onFocus={handleInputFocus}
-          placeholder={placeholder()}
-          disabled={status === 'loading'}
-          className={`flex-1 bg-transparent border-none outline-none text-sm py-1 placeholder:text-zinc-600 transition-colors ${
-            status === 'error' ? 'text-red-400' : 'text-zinc-300'
-          }`}
-        />
+      <input
+        ref={inputRef}
+        type="url"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onFocus={handleInputFocus}
+        placeholder={placeholder()}
+        disabled={status === 'loading'}
+        className={`flex-1 bg-transparent border-none outline-none text-sm py-0.5 placeholder:text-zinc-600 transition-colors ${
+          status === 'error' ? 'text-red-400' : 'text-zinc-300'
+        }`}
+      />
 
-        {status === 'loaded' || status === 'error' ? (
+      {status === 'loaded' || status === 'error' ? (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="shrink-0 p-1 rounded hover:bg-zinc-800 text-zinc-500 hover:text-white transition-colors"
+          title="Clear"
+        >
+          <X size={14} />
+        </button>
+      ) : (
+        inputValue.trim() && (
           <button
-            type="button"
-            onClick={handleClear}
-            className="shrink-0 p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-white transition-colors"
-            title="Clear"
+            type="submit"
+            disabled={status === 'loading'}
+            className="shrink-0 px-3 py-1 bg-red-600 hover:bg-red-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors"
           >
-            <X size={16} />
+            Load
           </button>
-        ) : (
-          inputValue.trim() && (
-            <button
-              type="submit"
-              disabled={status === 'loading'}
-              className="shrink-0 px-4 py-1.5 bg-red-600 hover:bg-red-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors"
-            >
-              Load
-            </button>
-          )
-        )}
-      </form>
-    </div>
+        )
+      )}
+    </form>
   );
 };
 
