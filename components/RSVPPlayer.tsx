@@ -92,6 +92,26 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
           }`}
           style={{ width: `${progress}%` }}
         />
+
+        {/* Time indicators */}
+        {elapsedMs !== undefined && totalMs !== undefined && totalMs > 0 && (
+          <>
+            <span
+              className={`absolute bottom-3 left-4 text-[10px] font-mono text-zinc-600 z-40 ${
+                zenMode ? "opacity-20" : ""
+              }`}
+            >
+              {fmtTime(elapsedMs)}
+            </span>
+            <span
+              className={`absolute bottom-3 right-4 text-[10px] font-mono text-zinc-600 z-40 ${
+                zenMode ? "opacity-20" : ""
+              }`}
+            >
+              -{fmtTime(Math.max(0, totalMs - elapsedMs))}
+            </span>
+          </>
+        )}
       </div>
     );
   }
