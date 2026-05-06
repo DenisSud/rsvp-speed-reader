@@ -2,9 +2,9 @@ export interface WordData {
   text: string;
   focalIndex: number;
   pauseMultiplier?: number;
-  /** Fixed-duration blank pause in ms (sentence/paragraph breaks).
-   *  Overrides WPM-based timing. */
-  fixedPauseMs?: number;
+  /** Adaptive blank pause: 'sentence' (after .!?) or 'paragraph' (after \n\n).
+   *  Duration scales with WPM — slower reading = longer pause (clamped). */
+  pauseType?: 'sentence' | 'paragraph';
   /** When true, RSVP player shows blank screen instead of text. */
   isPause?: boolean;
 }

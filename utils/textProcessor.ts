@@ -73,7 +73,7 @@ export const processText = (text: string): WordData[] => {
               text: "",
               focalIndex: 0,
               isPause: true,
-              fixedPauseMs: 200,
+              pauseType: 'sentence',
             });
             break;
           }
@@ -90,7 +90,7 @@ export const processText = (text: string): WordData[] => {
       if (
         result.length > 0 &&
         result[result.length - 1].isPause &&
-        result[result.length - 1].fixedPauseMs === 300
+        result[result.length - 1].pauseType === 'sentence'
       ) {
         result.pop();
       }
@@ -98,7 +98,7 @@ export const processText = (text: string): WordData[] => {
         text: "",
         focalIndex: 0,
         isPause: true,
-        fixedPauseMs: 600,
+        pauseType: 'paragraph',
       });
     }
   }

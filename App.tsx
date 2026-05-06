@@ -28,6 +28,16 @@ import UrlBar from "./components/UrlBar";
 import { processText } from "./utils/textProcessor";
 import { WordData, AppFont, AppFontWeight } from "./types";
 
+/** Adaptive pause configuration: scales with WPM, clamped.
+ *  At 300 WPM the pause equals `base`. Slower reading → longer pause. */
+const PAUSE_CONFIG: Record<
+  string,
+  { base: number; min: number; max: number }
+> = {
+  sentence: { base: 300, min: 150, max: 500 },
+  paragraph: { base: 600, min: 300, max: 1000 },
+};
+
 const App: React.FC = () => {
   const [text, setText] = useState<string>(
     "Speed reading is a skill that can be developed with practice. Rapid Serial Visual Presentation, or RSVP, is one of the most effective methods to achieve higher reading speeds. By presenting words one by one at a fixed focal point, we eliminate the time lost in eye movements across a page. This app allows you to customize your experience by adjusting the Words Per Minute. Focus on the red character and let the information flow directly into your mind."
@@ -104,23 +114,24 @@ const App: React.FC = () => {
       const word = words[currentIndex];
       let interval: number;
 
-      if (word?.fixedPauseMs !== undefined) {
-        // Fixed-duration blank pause (sentence / paragraph break)
-        interval = word.fixedPauseMs;
+      // Compute effective WPM (takes gradual increase into account)
+      let wpmForCalc = wpm;
+      if (enableGradualIncrease) {
+        const realUpTo = words
+          .slice(0, currentIndex + 1)
+          .filter((w) => !w.isPause).length;
+        const totalReal =
+          words.filter((w) => !w.isPause).length || 1;
+        const progressRatio = realUpTo / totalReal;
+        wpmForCalc = initialWpm + (targetWpm - initialWpm) * progressRatio;
+      }
+
+      if (word?.pauseType) {
+        // Adaptive blank pause — scales with WPM (clamped)
+        const cfg = PAUSE_CONFIG[word.pauseType];
+        const raw = cfg.base * (300 / wpmForCalc);
+        interval = Math.min(cfg.max, Math.max(cfg.min, raw));
       } else {
-        let wpmForCalc = wpm;
-
-        if (enableGradualIncrease) {
-          // Only advance progressive speed across real (non-pause) words
-          const realUpTo = words
-            .slice(0, currentIndex + 1)
-            .filter((w) => !w.isPause).length;
-          const totalReal =
-            words.filter((w) => !w.isPause).length || 1;
-          const progressRatio = realUpTo / totalReal;
-          wpmForCalc = initialWpm + (targetWpm - initialWpm) * progressRatio;
-        }
-
         const pauseMultiplier = word?.pauseMultiplier || 1;
         interval = (60000 / wpmForCalc) * pauseMultiplier;
       }
