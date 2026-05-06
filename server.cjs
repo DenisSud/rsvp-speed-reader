@@ -36,8 +36,8 @@ app.get('/api/fetch', async (req, res) => {
   }
 });
 
-// SPA fallback
-app.get('*', (_req, res) => {
+// SPA fallback (Express 5 wildcard syntax)
+app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
