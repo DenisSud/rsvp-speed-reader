@@ -1,0 +1,7 @@
+services:
+  rsvp:
+    build: .
+    container_name: rsvp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
