@@ -25,6 +25,7 @@ import RSVPPlayer from "./components/RSVPPlayer";
 import BackgroundMusic from "./components/BackgroundMusic";
 import VideoExportButton from "./components/VideoExportButton";
 import UrlBar from "./components/UrlBar";
+import FileUpload from "./components/FileUpload";
 import { processText } from "./utils/textProcessor";
 import { WordData, AppFont, AppFontWeight } from "./types";
 
@@ -462,12 +463,20 @@ const App: React.FC = () => {
             {/* Text Input */}
             <div className="lg:col-span-2 p-6 bg-zinc-950 border border-zinc-900 rounded-2xl flex flex-col gap-4">
               <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
+                  Insert Text
+                </h3>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">
-                    Insert Text
-                  </h3>
-                </div>
-                <button
+                  <FileUpload
+                    onTextReady={(uploadedText, title) => {
+                      const content = title
+                        ? `${title}\n\n${uploadedText}`
+                        : uploadedText;
+                      setText(content);
+                      reset();
+                    }}
+                  />
+                  <button
                   onClick={() => {
                     setText("");
                     reset();
@@ -476,6 +485,7 @@ const App: React.FC = () => {
                 >
                   Clear
                 </button>
+              </div>
               </div>
               <textarea
                 className="w-full h-48 bg-black border border-zinc-800 rounded-xl p-4 text-zinc-300 focus:outline-none focus:border-red-600 transition-colors resize-none mono text-sm leading-relaxed"
