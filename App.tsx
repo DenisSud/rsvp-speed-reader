@@ -24,6 +24,7 @@ import {
 import RSVPPlayer from "./components/RSVPPlayer";
 import BackgroundMusic from "./components/BackgroundMusic";
 import VideoExportButton from "./components/VideoExportButton";
+import UrlBar from "./components/UrlBar";
 import { processText } from "./utils/textProcessor";
 import { WordData, AppFont, AppFontWeight } from "./types";
 
@@ -236,9 +237,21 @@ const App: React.FC = () => {
       {/* Main Player Area */}
       <main
         className={`flex-1 flex flex-col justify-center items-center px-4 max-w-5xl mx-auto w-full transition-all duration-700 ${
-          isZenMode ? "gap-0 py-0" : "gap-8 py-12"
+          isZenMode ? "gap-0 py-0" : "gap-6 py-12"
         }`}
       >
+        {/* URL Bar — always visible, hidden in zen mode */}
+        <UrlBar
+          isZenMode={isZenMode}
+          onTextReady={(extractedText, title) => {
+            const content = title
+              ? `${title}\n\n${extractedText}`
+              : extractedText;
+            setText(content);
+            reset();
+          }}
+        />
+
         <div 
           onClick={isZenMode ? togglePlay : undefined}
           className={`w-full flex justify-center items-center ${isZenMode ? 'cursor-pointer' : ''}`}
