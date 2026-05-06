@@ -16,8 +16,14 @@ export const calculateFocalIndex = (word: string): number => {
 export const processText = (text: string): WordData[] => {
   if (!text) return [];
 
+  // Normalize: fix missing spaces between sentences when text
+  // extraction concatenates block elements (e.g. "something.This")
+  // Only applies when lowercase ends before punctuation and uppercase follows —
+  // avoids breaking abbreviations like "U.S.A" or numbers like "3.14"
+  const normalized = text.replace(/([a-z])([.!?])([A-Z])/g, '$1$2 $3');
+
   // Split by whitespace and filter out empty strings
-  const words = text.trim().split(/\s+/);
+  const words = normalized.trim().split(/\s+/);
 
   return words.map((word) => {
     let pauseMultiplier = 1;

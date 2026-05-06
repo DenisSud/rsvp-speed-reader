@@ -46,7 +46,13 @@ const UrlBar: React.FC<UrlBarProps> = ({ isZenMode, onTextReady }) => {
         throw new Error('No readable content found on this page');
       }
 
-      const text = article.textContent.trim();
+      // Use innerText on parsed content for proper spacing between
+      // block elements — textContent loses inter-element whitespace.
+      const contentDoc = new DOMParser().parseFromString(
+        article.content,
+        'text/html'
+      );
+      const text = (contentDoc.body.innerText || article.textContent).trim();
       const title = article.title || doc.title || url;
 
       setLoadedUrl(url);
