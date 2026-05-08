@@ -151,27 +151,27 @@ const RSVPPlayer: React.FC<RSVPPlayerProps> = ({
           zenMode ? "text-3xl sm:text-6xl md:text-9xl" : "text-2xl sm:text-4xl md:text-7xl"
         } ${weightClass}`}
       >
-        <div className="flex w-full items-center justify-center relative">
+        <div className="flex items-center justify-center relative w-full">
           {/* Prefix */}
-          <div 
-            className="flex-1 text-right text-white whitespace-nowrap overflow-hidden"
+          <span 
+            className="whitespace-nowrap text-white"
             style={{ opacity: sideOpacity }}
           >
             {prefix}
-          </div>
+          </span>
 
           {/* Focal Character */}
-          <div className="w-[1ch] shrink-0 text-center text-red-600 shadow-red-900/20 drop-shadow-[0_0_20px_rgba(220,38,38,0.6)] z-20">
+          <span className="w-[1ch] shrink-0 text-center text-red-600 shadow-red-900/20 drop-shadow-[0_0_20px_rgba(220,38,38,0.6)] z-20">
             {focal}
-          </div>
+          </span>
 
           {/* Suffix */}
-          <div 
-            className="flex-1 text-left text-white whitespace-nowrap overflow-hidden"
+          <span 
+            className="whitespace-nowrap text-white"
             style={{ opacity: sideOpacity }}
           >
             {suffix}
-          </div>
+          </span>
         </div>
       </div>
 
